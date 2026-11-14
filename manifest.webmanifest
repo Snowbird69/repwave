@@ -1,6 +1,6 @@
 {
-  "name": "IronLog",
-  "short_name": "IronLog",
+  "name": "RepWave",
+  "short_name": "RepWave",
   "description": "Local-only training log with auto-progression",
   "start_url": "./",
   "scope": "./",

@@ -1,6 +1,6 @@
 /* IronLog service worker — cache-first app shell.
    To ship an update: bump CACHE_VERSION, then open the app once while online. */
-const CACHE_VERSION = "ironlog-v3";
+const CACHE_VERSION = "repwave-v4";
 const ASSETS = [
   "./",
   "./index.html",

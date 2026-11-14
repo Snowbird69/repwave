@@ -6,11 +6,11 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="IronLog">
+<meta name="apple-mobile-web-app-title" content="RepWave">
 <meta name="theme-color" content="#0c0718">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
-<title>IronLog</title>
+<title>RepWave</title>
 <style>
 /* ---------- outrun tokens (sRGB base) ---------- */
 :root{
@@ -74,6 +74,7 @@ input,select,textarea{font:inherit;color:var(--ink);background:var(--bg);
   border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:16px}
 input[type=number]{font-family:var(--mono);text-align:center;-moz-appearance:textfield}
 input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+input::placeholder,textarea::placeholder{color:var(--faint)}
 textarea{width:100%;min-height:64px;resize:vertical}
 label.fld{display:block;margin:10px 0}
 label.fld>span{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;
@@ -94,6 +95,11 @@ label.fld>span{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;
   font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin-top:6px}
 .collabels span:nth-child(2),.collabels span:nth-child(3){text-align:center}
 
+/* machine / feel rows on an exercise card */
+.mrow{display:grid;grid-template-columns:1.4fr 1fr;gap:8px;margin-top:10px}
+.mrow input,.mrow select{min-width:0;font-size:14px;padding:8px 10px}
+.feelrow{width:100%;margin-top:8px;font-size:14px;padding:8px 10px}
+
 /* progression chips */
 .chip{display:inline-flex;align-items:center;gap:4px;font-family:var(--mono);font-size:11px;
   padding:3px 8px;border-radius:999px;letter-spacing:.04em;vertical-align:2px}
@@ -101,6 +107,13 @@ label.fld>span{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;
 .chip-top{border:1px solid var(--cyan);color:var(--cyan)}
 .chip-new{border:1px solid var(--line);color:var(--dim)}
 .chip-skip{border:1px solid var(--line);color:var(--faint)}
+
+/* focus chips (session builder) */
+.focigrid{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.chip-btn{font-family:var(--mono);font-size:13px;letter-spacing:.06em;text-transform:uppercase;
+  padding:9px 13px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--dim)}
+.chip-btn.sel{border-color:var(--cyan);color:var(--cyan);text-shadow:0 0 10px var(--glow-cyan);
+  box-shadow:0 0 12px var(--glow-cyan),inset 0 0 8px rgba(25,220,255,.12)}
 
 /* hero: synthwave sun over a perspective grid */
 .hero{position:relative;overflow:hidden;padding:22px 16px;border:1px solid var(--line);border-radius:16px;margin:12px 0;
@@ -117,12 +130,12 @@ label.fld>span{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;
   opacity:.35;transform:perspective(240px) rotateX(56deg);transform-origin:bottom;
   -webkit-mask:linear-gradient(180deg,transparent,#000 45%);mask:linear-gradient(180deg,transparent,#000 45%)}
 .hero>.hero-in{position:relative;z-index:1}
-.hero h1{font-size:32px;line-height:1.05;text-transform:uppercase;font-style:italic;letter-spacing:.01em;
+.hero h1{font-size:30px;line-height:1.05;text-transform:uppercase;font-style:italic;letter-spacing:.01em;
   color:var(--ink);
   background:linear-gradient(90deg,var(--cyan) 0%,var(--ink) 45%,var(--pink) 100%);
   -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
   padding-right:64px}
-.hero .why{margin:10px 0 16px;color:var(--dim);font-size:14px}
+.hero .why{margin:10px 0 4px;color:var(--dim);font-size:14px}
 
 /* active session header */
 .sess-head h2{text-transform:uppercase;font-style:italic;
@@ -157,7 +170,7 @@ nav button .ic{display:block;font-size:18px;margin-bottom:2px}
 .divider{height:1px;background:var(--line);margin:12px 0}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom));
   background:var(--pink);color:#fff;font-weight:700;padding:10px 16px;border-radius:999px;
-  z-index:20;font-size:14px;opacity:0;transition:opacity .2s;box-shadow:0 0 18px var(--glow-pink)}
+  z-index:20;font-size:14px;opacity:0;transition:opacity .2s;box-shadow:0 0 18px var(--glow-pink);max-width:88vw;text-align:center}
 .toast.show{opacity:1}
 .empty{color:var(--faint);text-align:center;padding:28px 10px;font-size:14px}
 details summary{cursor:pointer;list-style:none}
@@ -168,14 +181,15 @@ details summary::-webkit-details-marker{display:none}
   display:flex;align-items:flex-end;justify-content:center;
   padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom))}
 .modal{background:var(--surface);border:1px solid var(--line);border-radius:16px;
-  padding:16px;width:100%;max-width:420px;max-height:70vh;overflow-y:auto;
+  padding:16px;width:100%;max-width:420px;max-height:72vh;overflow-y:auto;
   box-shadow:0 0 30px rgba(0,0,0,.6),0 0 22px var(--glow-cyan)}
 .modal h3{margin:0 0 12px;font-size:17px}
 .modal input[type=text]{width:100%}
 .m-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
 .m-actions.single{grid-template-columns:1fr}
-.m-list{display:grid;gap:8px}
-.m-list button{text-align:left}
+.m-list{display:grid;gap:8px;margin-top:10px}
+.m-list button{text-align:left;display:block}
+.m-list .sub{display:block;font-family:var(--mono);font-size:11px;color:var(--faint);margin-top:2px;letter-spacing:.05em}
 
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -187,12 +201,12 @@ details summary::-webkit-details-marker{display:none}
 
 <script>
 /* ============================================================
-   IronLog v3 — offline-first training log, outrun edition
+   RepWave v4 — offline-first training log, outrun edition
    Data lives in localStorage on this device. Export regularly.
    ============================================================ */
 "use strict";
 
-const LS_KEY = "ironlog.v1";
+const LS_KEY = "ironlog.v1";          // storage key kept from IronLog so existing data survives
 const LS_PREIMPORT = "ironlog.backup.preimport";
 
 /* ---------- utilities ---------- */
@@ -221,6 +235,8 @@ function toast(msg){
   const t = $("#toast"); t.textContent = msg; t.classList.add("show");
   clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 1800);
 }
+/* numeric inputs: show empty with a "0" placeholder instead of a literal 0 */
+const numVal = v => (v === 0 || v === "" || v == null) ? "" : v;
 
 /* ---------- in-app dialogs ----------
    window.prompt()/confirm() silently no-op when the app runs standalone
@@ -267,14 +283,135 @@ function appPrompt(msg, opts){
     setTimeout(() => inp.focus(), 50);
   });
 }
-function appPick(title, names){
+/* searchable picker: items = [{label, sub}] → resolves original index or null */
+function appPickSearch(title, items){
   return appModal((box, close) => {
     box.innerHTML = `<h3>${esc(title)}</h3>
-      <div class="m-list">${names.map((n,i) => `<button data-pick="${i}">${esc(n)}</button>`).join("")}</div>
-      <div class="m-actions single"><button data-m="no">Cancel</button></div>`;
+      <input type="text" placeholder="Search…" data-m="search">
+      <div class="m-list"></div>
+      <div class="m-actions single" style="margin-top:10px"><button data-m="no">Cancel</button></div>`;
+    const listEl = box.querySelector(".m-list");
+    const inp = box.querySelector('[data-m="search"]');
+    const draw = q => {
+      const needle = q.trim().toLowerCase();
+      const hits = [];
+      items.forEach((it, i) => {
+        if(!needle || (it.label + " " + (it.sub||"")).toLowerCase().includes(needle)) hits.push(i);
+      });
+      listEl.innerHTML = hits.slice(0, 40).map(i =>
+        `<button data-pick="${i}">${esc(items[i].label)}${items[i].sub ? `<span class="sub">${esc(items[i].sub)}</span>` : ""}</button>`).join("")
+        || `<div class="empty">No matches</div>`;
+      listEl.querySelectorAll("[data-pick]").forEach(b => { b.onclick = () => close(Number(b.dataset.pick)); });
+    };
+    draw("");
+    inp.addEventListener("input", () => draw(inp.value));
     box.querySelector('[data-m="no"]').onclick = () => close(null);
-    box.querySelectorAll("[data-pick]").forEach(b => { b.onclick = () => close(Number(b.dataset.pick)); });
   });
+}
+
+/* ============================================================
+   EXERCISE LIBRARY (built-in, searchable)
+   g: muscle group · e: equipment (bb barbell, db dumbbell, cb cable,
+   mc machine, bw bodyweight, kb kettlebell, cd cardio)
+   ============================================================ */
+const EQUIP = {bb:"Barbell", db:"Dumbbell", cb:"Cable", mc:"Machine", bw:"Bodyweight", kb:"Kettlebell", cd:"Cardio"};
+const EXDB = [
+ // chest
+ {n:"Barbell Bench Press",g:"chest",e:"bb"},{n:"Incline Barbell Bench",g:"chest",e:"bb"},{n:"Decline Bench Press",g:"chest",e:"bb"},
+ {n:"DB Bench Press",g:"chest",e:"db"},{n:"Incline DB Press",g:"chest",e:"db"},{n:"DB Fly",g:"chest",e:"db"},
+ {n:"Cable Fly",g:"chest",e:"cb"},{n:"Low-to-High Cable Fly",g:"chest",e:"cb"},{n:"Pec Deck",g:"chest",e:"mc"},
+ {n:"Chest Press Machine",g:"chest",e:"mc"},{n:"Smith Bench Press",g:"chest",e:"mc"},{n:"Push-Ups",g:"chest",e:"bw"},{n:"Dips",g:"chest",e:"bw"},
+ // back
+ {n:"Deadlift",g:"back",e:"bb"},{n:"Barbell Row",g:"back",e:"bb"},{n:"T-Bar Row",g:"back",e:"bb"},{n:"Rack Pull",g:"back",e:"bb"},
+ {n:"One-Arm DB Row",g:"back",e:"db"},{n:"Chest-Supported DB Row",g:"back",e:"db"},
+ {n:"Lat Pulldown",g:"back",e:"cb"},{n:"Seated Cable Row",g:"back",e:"cb"},{n:"Straight-Arm Pulldown",g:"back",e:"cb"},{n:"Face Pull",g:"back",e:"cb"},
+ {n:"Machine Row",g:"back",e:"mc"},{n:"Assisted Pull-Up Machine",g:"back",e:"mc"},
+ {n:"Pull-Ups",g:"back",e:"bw"},{n:"Chin-Ups",g:"back",e:"bw"},{n:"Back Extension",g:"back",e:"bw"},{n:"Barbell Shrug",g:"back",e:"bb"},
+ // shoulders
+ {n:"Overhead Press (Barbell)",g:"shoulders",e:"bb"},{n:"Seated DB Shoulder Press",g:"shoulders",e:"db"},{n:"Arnold Press",g:"shoulders",e:"db"},
+ {n:"DB Lateral Raise",g:"shoulders",e:"db"},{n:"Cable Lateral Raise",g:"shoulders",e:"cb"},{n:"Front Raise",g:"shoulders",e:"db"},
+ {n:"Rear Delt Fly",g:"shoulders",e:"db"},{n:"Reverse Pec Deck",g:"shoulders",e:"mc"},{n:"Machine Shoulder Press",g:"shoulders",e:"mc"},
+ {n:"Upright Row",g:"shoulders",e:"bb"},
+ // biceps
+ {n:"Barbell Curl",g:"biceps",e:"bb"},{n:"EZ-Bar Curl",g:"biceps",e:"bb"},{n:"DB Curl",g:"biceps",e:"db"},{n:"Hammer Curl",g:"biceps",e:"db"},
+ {n:"Incline DB Curl",g:"biceps",e:"db"},{n:"Concentration Curl",g:"biceps",e:"db"},{n:"Preacher Curl",g:"biceps",e:"mc"},
+ {n:"Cable Curl",g:"biceps",e:"cb"},{n:"Rope Hammer Curl",g:"biceps",e:"cb"},{n:"Machine Curl",g:"biceps",e:"mc"},
+ // triceps
+ {n:"Triceps Pushdown",g:"triceps",e:"cb"},{n:"Rope Pushdown",g:"triceps",e:"cb"},{n:"Cable Overhead Extension",g:"triceps",e:"cb"},
+ {n:"Skull Crushers",g:"triceps",e:"bb"},{n:"Close-Grip Bench Press",g:"triceps",e:"bb"},{n:"Overhead DB Extension",g:"triceps",e:"db"},
+ {n:"DB Kickbacks",g:"triceps",e:"db"},{n:"Triceps Dip Machine",g:"triceps",e:"mc"},{n:"Bench Dips",g:"triceps",e:"bw"},
+ // quads / legs
+ {n:"Back Squat",g:"quads",e:"bb"},{n:"Front Squat",g:"quads",e:"bb"},{n:"Goblet Squat",g:"quads",e:"db"},{n:"Smith Squat",g:"quads",e:"mc"},
+ {n:"Leg Press",g:"quads",e:"mc"},{n:"Hack Squat",g:"quads",e:"mc"},{n:"Leg Extension",g:"quads",e:"mc"},
+ {n:"Walking Lunge",g:"quads",e:"db"},{n:"Bulgarian Split Squat",g:"quads",e:"db"},{n:"Step-Ups",g:"quads",e:"db"},
+ // hamstrings / glutes
+ {n:"Romanian Deadlift",g:"hams",e:"bb"},{n:"Sumo Deadlift",g:"hams",e:"bb"},{n:"Good Morning",g:"hams",e:"bb"},
+ {n:"Lying Leg Curl",g:"hams",e:"mc"},{n:"Seated Leg Curl",g:"hams",e:"mc"},{n:"Hip Thrust",g:"hams",e:"bb"},
+ {n:"Glute Bridge",g:"hams",e:"bw"},{n:"Cable Pull-Through",g:"hams",e:"cb"},{n:"Glute Kickback",g:"hams",e:"cb"},
+ // calves
+ {n:"Standing Calf Raise",g:"calves",e:"mc"},{n:"Seated Calf Raise",g:"calves",e:"mc"},{n:"Leg Press Calf Raise",g:"calves",e:"mc"},
+ // core
+ {n:"Plank",g:"core",e:"bw"},{n:"Side Plank",g:"core",e:"bw"},{n:"Hanging Leg Raise",g:"core",e:"bw"},{n:"Sit-Ups",g:"core",e:"bw"},
+ {n:"Russian Twist",g:"core",e:"db"},{n:"Ab Wheel Rollout",g:"core",e:"bw"},{n:"Cable Crunch",g:"core",e:"cb"},{n:"Machine Crunch",g:"core",e:"mc"},
+ // cardio / HIIT
+ {n:"Weighted Vest Treadmill",g:"cardio",e:"cd"},{n:"Treadmill Run",g:"cardio",e:"cd"},{n:"Incline Walk",g:"cardio",e:"cd"},
+ {n:"Stationary Bike",g:"cardio",e:"cd"},{n:"Rowing Machine",g:"cardio",e:"cd"},{n:"Stair Climber",g:"cardio",e:"cd"},
+ {n:"Elliptical",g:"cardio",e:"cd"},{n:"Jump Rope",g:"cardio",e:"cd"},{n:"Battle Ropes",g:"cardio",e:"cd"},
+ {n:"Burpees",g:"cardio",e:"bw"},{n:"Sled Push",g:"cardio",e:"cd"},{n:"Kettlebell Swing",g:"cardio",e:"kb"},{n:"Mountain Climbers",g:"cardio",e:"bw"}
+];
+const GROUP_LABEL = {chest:"Chest", back:"Back", shoulders:"Shoulders", biceps:"Biceps", triceps:"Triceps",
+  quads:"Quads", hams:"Hams / Glutes", calves:"Calves", core:"Core", cardio:"HIIT / Cardio"};
+/* keywords that match a user exercise's name/muscles text to a group */
+const GROUP_KEYS = {
+  chest:["chest","pec","bench","fly","dip","push-up","pushup"],
+  back:["back","lat","row","pull-up","pullup","chin","deadlift","shrug","trap"],
+  shoulders:["shoulder","delt","press (barbell)","lateral","raise","arnold"],
+  biceps:["bicep","curl"],
+  triceps:["tricep","pushdown","skull","extension"],
+  quads:["quad","squat","lunge","leg press","leg extension","step-up"],
+  hams:["hamstring","glute","rdl","romanian","leg curl","hip thrust","pull-through"],
+  calves:["calf","calves"],
+  core:["core","ab","plank","crunch","twist","leg raise","sit-up"],
+  cardio:["cardio","conditioning","hiit","treadmill","bike","row","sled","rope","burpee","climber","elliptical","stair"]
+};
+/* launcher chips: id → atomic groups */
+const FOCI = [
+  {id:"upper",  label:"Upper",   groups:["chest","back","shoulders","biceps","triceps"]},
+  {id:"lower",  label:"Lower",   groups:["quads","hams","calves"]},
+  {id:"push",   label:"Push",    groups:["chest","shoulders","triceps"]},
+  {id:"pull",   label:"Pull",    groups:["back","biceps"]},
+  {id:"chest",  label:"Chest",   groups:["chest"]},
+  {id:"back",   label:"Back",    groups:["back"]},
+  {id:"shoulders",label:"Shoulders",groups:["shoulders"]},
+  {id:"biceps", label:"Biceps",  groups:["biceps"]},
+  {id:"triceps",label:"Triceps", groups:["triceps"]},
+  {id:"legs",   label:"Legs",    groups:["quads","hams","calves"]},
+  {id:"core",   label:"Core",    groups:["core"]},
+  {id:"hiit",   label:"HIIT",    groups:["cardio"]}
+];
+function exMatchesGroup(ex, g){
+  const hay = (ex.name + " " + (ex.muscles||"")).toLowerCase();
+  if(g === "cardio" && ex.type === "cardio") return true;
+  return GROUP_KEYS[g].some(k => hay.includes(k));
+}
+function termToGroups(term){
+  const t = term.trim().toLowerCase();
+  if(!t) return [];
+  const f = FOCI.find(f => f.id.startsWith(t) || f.label.toLowerCase().startsWith(t));
+  if(f) return f.groups;
+  return Object.keys(GROUP_KEYS).filter(g => g.startsWith(t) || GROUP_KEYS[g].some(k => k.startsWith(t)));
+}
+const EQUIP_TYPE = {bb:"barbell", db:"dumbbell", cb:"cable", mc:"machine", bw:"bodyweight", kb:"dumbbell", cd:"cardio"};
+/* find-or-create a library exercise from an EXDB entry */
+function ensureExercise(dbe){
+  const existing = Object.values(S.exercises).find(e => e.name.toLowerCase() === dbe.n.toLowerCase());
+  if(existing) return existing;
+  const id = uid();
+  const type = EQUIP_TYPE[dbe.e] || "machine";
+  S.exercises[id] = {id, name: dbe.n, type, muscles: dbe.g === "hams" ? "hamstrings, glutes" : dbe.g,
+    sets: 3, repMin: 8, repMax: 12, increment: type === "bodyweight" ? 0 : 5};
+  if(type === "cardio" && !S.cardioIds.includes(id)) S.cardioIds.push(id);
+  return S.exercises[id];
 }
 
 /* ---------- seed data ---------- */
@@ -288,10 +425,10 @@ function seedState(){
   const bench    = mk("Barbell Bench Press", "barbell",  "chest, triceps", 3, 8, 12, 5);
   const incline  = mk("Incline DB Press",    "dumbbell", "chest, shoulders", 3, 8, 12, 5);
   const dips     = mk("Dips",                "bodyweight","chest, triceps", 3, 6, 12, 0);
-  const pushdown = mk("Triceps Pushdown",    "machine",  "triceps", 3, 10, 15, 5);
+  const pushdown = mk("Triceps Pushdown",    "cable",    "triceps", 3, 10, 15, 5);
   const pullups  = mk("Pull-Ups",            "bodyweight","back, biceps", 3, 5, 10, 0);
   const row      = mk("One-Arm DB Row",      "dumbbell", "back", 3, 8, 12, 5);
-  const pulldown = mk("Lat Pulldown",        "machine",  "back, biceps", 3, 8, 12, 5);
+  const pulldown = mk("Lat Pulldown",        "cable",    "back, biceps", 3, 8, 12, 5);
   const curl     = mk("DB Curl",             "dumbbell", "biceps", 3, 8, 12, 5);
   const tread    = mk("Weighted Vest Treadmill", "cardio", "conditioning", 0, 0, 0, 0);
 
@@ -337,7 +474,7 @@ function save(){
 }
 
 /* ============================================================
-   LOGIC-START  (pure functions — also exercised by tests)
+   LOGIC  (pure functions — also exercised by tests)
    ============================================================ */
 
 /** Most recent completed performance of an exercise, or null. */
@@ -397,14 +534,33 @@ function cardioHasData(c){
   return [c.min, c.dist, c.avgHr, c.maxHr, c.cal].some(v => v !== "" && v !== 0 && v != null);
 }
 
-/* ============================================================
-   LOGIC-END
-   ============================================================ */
+/* machine / type · weight × reps · feel — his PR recording order */
+function perfLine(e, units){
+  const bits = [];
+  const mach = [e.machine, e.mtype].filter(Boolean).join(" / ");
+  if(mach) bits.push(mach);
+  const done = (e.sets||[]).filter(st => st.done);
+  const byW = done.map(st => `${st.w||"BW"}×${st.r}`).join(", ");
+  if(byW) bits.push(byW);
+  if(e.feel) bits.push(e.feel);
+  return bits.join(" · ");
+}
 
 /* ---------- session lifecycle ---------- */
 function freshEntry(ex){
   const pf = prefillStrength(ex, S.sessions);
-  return {exerciseId: ex.id, kind: pf.kind, bump: pf.bump || 0, sets: pf.sets};
+  const last = lastPerformance(ex.id, S.sessions);
+  // carry the machine/type used last time forward as the default
+  let machine = "", mtype = "";
+  for(const s of S.sessions){
+    const prev = (s.entries||[]).find(en => en.exerciseId === ex.id);
+    if(prev && (prev.machine || prev.mtype)){ machine = prev.machine || ""; mtype = prev.mtype || ""; break; }
+    if(prev) break;
+  }
+  return {exerciseId: ex.id, kind: pf.kind, bump: pf.bump || 0, sets: pf.sets, machine, mtype, feel: ""};
+}
+function cardioEntry(ex){
+  return {exerciseId: ex.id, cardio: prefillCardio(ex, S.sessions)};
 }
 function startSession(templateId, withCardio){
   const tpl = S.templates.find(t => t.id === templateId) || null;
@@ -420,12 +576,41 @@ function startSession(templateId, withCardio){
     for(const cid of S.cardioIds){
       const ex = S.exercises[cid];
       if(!ex) continue;
-      entries.push({exerciseId: cid, cardio: prefillCardio(ex, S.sessions)});
+      entries.push(cardioEntry(ex));
     }
   }
-  S.active = {id: uid(), date: todayStr(), templateId: tpl ? tpl.id : null, entries, notes: "",
+  S.active = {id: uid(), date: todayStr(), templateId: tpl ? tpl.id : null, focus: null, entries, notes: "",
               startedAt: Date.now(), accumMs: 0, paused: false};
   save(); render();
+}
+/* the typeable/chip launcher: build a session from focus groups */
+function startFocusSession(groups, label){
+  const atomic = [...new Set(groups)];
+  const entries = [];
+  const added = new Set();
+  for(const g of atomic){
+    let count = 0;
+    for(const ex of Object.values(S.exercises)){
+      if(added.has(ex.id) || !exMatchesGroup(ex, g)) continue;
+      entries.push(ex.type === "cardio" ? cardioEntry(ex) : freshEntry(ex));
+      added.add(ex.id); count++;
+    }
+    if(count < 3){
+      for(const dbe of EXDB){
+        if(count >= 3) break;
+        if(dbe.g !== g) continue;
+        if([...added].some(id => S.exercises[id] && S.exercises[id].name.toLowerCase() === dbe.n.toLowerCase())) continue;
+        const ex = ensureExercise(dbe);
+        if(added.has(ex.id)) continue;
+        entries.push(ex.type === "cardio" ? cardioEntry(ex) : freshEntry(ex));
+        added.add(ex.id); count++;
+      }
+    }
+  }
+  S.active = {id: uid(), date: todayStr(), templateId: null, focus: label, entries, notes: "",
+              startedAt: Date.now(), accumMs: 0, paused: false};
+  save(); render();
+  if(!entries.length) toast("Nothing matched — tap + Add exercise");
 }
 function finishSession(){
   const a = S.active;
@@ -434,15 +619,16 @@ function finishSession(){
   for(const e of a.entries){
     if(e.skipped) continue;
     if(e.cardio){
-      if(cardioHasData(e.cardio)) kept.push({exerciseId: e.exerciseId, cardio: e.cardio});
+      if(cardioHasData(e.cardio)) kept.push({exerciseId: e.exerciseId, cardio: e.cardio, feel: e.feel || undefined});
     }else{
       const done = (e.sets || []).filter(st => st.done);
-      if(done.length) kept.push({exerciseId: e.exerciseId, sets: e.sets});
+      if(done.length) kept.push({exerciseId: e.exerciseId, sets: e.sets,
+        machine: e.machine || undefined, mtype: e.mtype || undefined, feel: e.feel || undefined});
     }
   }
   if(!kept.length){ toast("Nothing logged yet"); return; }
   const dur = Math.max(1, Math.round(elapsedMs() / 60000));
-  S.sessions.unshift({id: a.id, date: a.date, templateId: a.templateId, entries: kept, notes: a.notes, dur});
+  S.sessions.unshift({id: a.id, date: a.date, templateId: a.templateId, focus: a.focus, entries: kept, notes: a.notes, dur});
   S.active = null;
   save(); render();
   toast("Session saved");
@@ -483,25 +669,58 @@ function syncTick(){
 }
 
 /* --- mid-workout changes: skip / swap / switch day --- */
+/* options for the searchable picker: your library first, then the built-in DB */
+function pickerItems(excludeIds){
+  const items = [];
+  const seen = new Set();
+  for(const ex of Object.values(S.exercises)){
+    if(ex.type === "cardio" || excludeIds.has(ex.id)) continue;
+    items.push({label: ex.name, sub: (ex.muscles||"") + " · your library", exId: ex.id});
+    seen.add(ex.name.toLowerCase());
+  }
+  for(const dbe of EXDB){
+    if(dbe.e === "cd" || seen.has(dbe.n.toLowerCase())) continue;
+    items.push({label: dbe.n, sub: (GROUP_LABEL[dbe.g]||dbe.g) + " · " + EQUIP[dbe.e], dbe});
+  }
+  return items;
+}
+function resolvePick(items, idx){
+  const it = items[idx];
+  if(!it) return null;
+  return it.exId ? S.exercises[it.exId] : ensureExercise(it.dbe);
+}
+async function addExerciseMenu(){
+  const inSession = new Set(S.active.entries.map(e => e.exerciseId));
+  const items = pickerItems(inSession);
+  if(!items.length){ toast("Everything's already in"); return; }
+  const idx = await appPickSearch("Add which exercise?", items);
+  if(idx == null) return;
+  const ex = resolvePick(items, idx);
+  if(!ex) return;
+  S.active.entries.push(freshEntry(ex));
+  save(); render();
+}
 async function swapEntry(i){
   const cur = S.active.entries[i];
   const curEx = S.exercises[cur.exerciseId];
-  const pool = Object.values(S.exercises).filter(e =>
-    e.type !== "cardio" && e.id !== cur.exerciseId && !S.active.entries.some(en => en.exerciseId === e.id));
-  if(!pool.length){ toast("No other exercises to swap in — add some in Plan"); return; }
-  const idx = await appPick("Swap " + (curEx ? curEx.name : "this") + " for…", pool.map(e => e.name));
-  if(idx == null || !pool[idx]) return;
+  const inSession = new Set(S.active.entries.map(e => e.exerciseId));
+  const items = pickerItems(inSession);
+  if(!items.length){ toast("No other exercises to swap in"); return; }
+  const idx = await appPickSearch("Swap " + (curEx ? curEx.name : "this") + " for…", items);
+  if(idx == null) return;
   const hasWork = (cur.sets || []).some(st => st.done);
   if(hasWork && !(await appConfirm("This drops the sets already logged for " + (curEx ? curEx.name : "it") + ".", "Swap anyway"))) return;
-  S.active.entries[i] = freshEntry(pool[idx]);
+  const ex = resolvePick(items, idx);
+  if(!ex) return;
+  S.active.entries[i] = freshEntry(ex);
   save(); render();
-  toast("Swapped to " + pool[idx].name);
+  toast("Swapped to " + ex.name);
 }
 async function switchDay(){
   const a = S.active;
   const others = S.templates.filter(t => t.id !== a.templateId);
   if(!others.length){ toast("No other day templates yet — add one in Plan"); return; }
-  const idx = await appPick("Switch to which day?", others.map(t => t.name));
+  const idx = await appPickSearch("Switch to which day?", others.map(t => ({label: t.name, sub: t.exerciseIds.length + " exercises"})));
   if(idx == null || !others[idx]) return;
   const tpl = others[idx];
   // keep cardio and anything with logged sets; replace the untouched strength work
@@ -515,6 +734,7 @@ async function switchDay(){
   }
   a.entries = kept;
   a.templateId = tpl.id;
+  a.focus = null;
   save(); render();
   toast("Switched to " + tpl.name);
 }
@@ -541,52 +761,45 @@ function renderTabs(){
       <span class="ic">${t.ic}</span>${t.label}</button>`).join("");
 }
 
-/* ----- Today (no active session) ----- */
+/* ----- Today (no active session): build what you're actually doing ----- */
+const focusSel = new Set();
 function viewToday(){
   const nextId = suggestNextTemplate(S);
   const tpl = S.templates.find(t => t.id === nextId);
   const lastRot = S.sessions.find(s => S.rotation.includes(s.templateId));
   const why = lastRot
-    ? `Last: ${esc(tplName(lastRot.templateId))} · ${daysAgo(lastRot.date)}`
-    : "First session — rotation starts here.";
-  const others = S.templates.filter(t => !tpl || t.id !== tpl.id);
+    ? `Rotation pick · last: ${esc(tplName(lastRot))} ${daysAgo(lastRot.date)}`
+    : "Rotation pick · first session";
   return `
-    <p class="eyebrow">Up next</p>
+    <p class="eyebrow">Build today</p>
     <div class="hero">
       <div class="sun" aria-hidden="true"></div>
       <div class="hero-in">
-        <h1>${tpl ? esc(tpl.name) : "No day templates"}</h1>
-        <p class="why">${why}</p>
-        ${tpl ? previewList(tpl) : ""}
-        <div style="margin-top:16px;display:grid;gap:10px">
-          <button class="btn-primary btn-wide" data-action="start" data-tpl="${tpl?tpl.id:""}" data-cardio="0">Start ${tpl?esc(tpl.name):""}</button>
-          <button class="btn-wide" data-action="start" data-tpl="${tpl?tpl.id:""}" data-cardio="1">Start + vest treadmill</button>
+        <h1>What are you hitting?</h1>
+        <p class="why">Pick for the equipment that's actually in front of you.</p>
+        <div class="focigrid">
+          ${FOCI.map(f => `<button class="chip-btn ${focusSel.has(f.id)?"sel":""}" data-action="focus-chip" data-f="${f.id}">${f.label}</button>`).join("")}
+        </div>
+        <input type="text" id="focustext" placeholder="…or type it: tri, quads, hiit" autocomplete="off" style="width:100%">
+        <div style="margin-top:14px">
+          <button class="btn-primary btn-wide" data-action="start-focus">Build session</button>
         </div>
       </div>
     </div>
     <div class="card">
-      <p class="eyebrow" style="margin-bottom:8px">Instead</p>
+      <p class="eyebrow" style="margin-bottom:8px">Quick start</p>
       <div style="display:grid;gap:8px">
-        ${others.map(t => `<button data-action="start" data-tpl="${t.id}" data-cardio="0">${esc(t.name)}</button>`).join("")}
+        ${tpl ? `<button data-action="start" data-tpl="${tpl.id}" data-cardio="0"><strong>${esc(tpl.name)}</strong><span class="sub-line small dim" style="display:block">${esc(why)}</span></button>` : ""}
+        ${tpl ? `<button data-action="start" data-tpl="${tpl.id}" data-cardio="1">${esc(tpl.name)} + vest treadmill</button>` : ""}
+        ${S.templates.filter(t => !tpl || t.id !== tpl.id).map(t => `<button data-action="start" data-tpl="${t.id}" data-cardio="0">${esc(t.name)}</button>`).join("")}
         <button data-action="start" data-tpl="" data-cardio="1">Cardio only</button>
       </div>
     </div>`;
 }
-function tplName(id){ const t = S.templates.find(t => t.id === id); return t ? t.name : "Custom"; }
-function previewList(tpl){
-  return `<div>` + tpl.exerciseIds.map(id => {
-    const ex = S.exercises[id]; if(!ex) return "";
-    const pf = prefillStrength(ex, S.sessions);
-    let chip = "";
-    if(pf.kind === "progressed") chip = ` <span class="chip chip-up">▲ +${pf.bump} ${S.settings.units}</span>`;
-    if(pf.kind === "attop")      chip = ` <span class="chip chip-top">at top — add reps/vest</span>`;
-    if(pf.kind === "first")      chip = ` <span class="chip chip-new">first time</span>`;
-    const w = pf.sets[0] ? pf.sets[0].w : 0;
-    return `<div class="spread" style="padding:5px 0">
-      <span>${esc(ex.name)}${chip}</span>
-      <span class="num dim">${ex.type==="bodyweight" && !w ? "BW" : w + " " + S.settings.units}</span>
-    </div>`;
-  }).join("") + `</div>`;
+function tplName(s){
+  if(typeof s === "object") { if(s.focus) return s.focus; s = s.templateId; }
+  const t = S.templates.find(t => t.id === s);
+  return t ? t.name : "Custom";
 }
 
 /* ----- Active session ----- */
@@ -596,7 +809,7 @@ function viewActive(){
     <div class="spread sess-head">
       <div>
         <p class="eyebrow">${esc(fmtDate(a.date))}</p>
-        <h2>${esc(a.templateId ? tplName(a.templateId) : "Cardio")}</h2>
+        <h2>${esc(a.focus || (a.templateId ? tplName(a.templateId) : "Cardio"))}</h2>
       </div>
       <span class="timer ${a.paused ? "paused" : ""}" id="timerchip">${a.paused ? "⏸ " : ""}<span id="elapsed">${fmtElapsed(elapsedMs())}</span></span>
     </div>
@@ -614,7 +827,7 @@ function viewActive(){
       </div>
     </div>
     <div class="card">
-      <label class="fld"><span>Notes</span>
+      <label class="fld"><span>Session notes</span>
         <textarea data-bind="notes" placeholder="How it went, tweaks for next time…">${esc(a.notes)}</textarea>
       </label>
     </div>
@@ -638,6 +851,7 @@ function exerciseCard(e, i){
   if(e.kind === "progressed") chip = ` <span class="chip chip-up">▲ +${e.bump} ${S.settings.units}</span>`;
   if(e.kind === "attop")      chip = ` <span class="chip chip-top">at top — add reps/vest</span>`;
   if(e.kind === "first")      chip = ` <span class="chip chip-new">first time — set weight</span>`;
+  const mt = v => `<option ${e.mtype===v?"selected":""}>${v}</option>`;
   return `<div class="card">
     <div class="spread">
       <div>
@@ -646,8 +860,15 @@ function exerciseCard(e, i){
       </div>
       <button class="btn-ghost" data-action="remove-entry" data-i="${i}" aria-label="Remove ${esc(ex.name)}">✕</button>
     </div>
+    <div class="mrow">
+      <input type="text" placeholder="Machine / station" value="${esc(e.machine||"")}" data-bind="machine" data-i="${i}" aria-label="machine name">
+      <select data-bind="mtype" data-i="${i}" aria-label="machine type">
+        <option value="">Type…</option>${mt("Free weight")}${mt("Cable")}${mt("Machine")}${mt("Bodyweight")}
+      </select>
+    </div>
     <div class="collabels"><span></span><span>${ex.type==="bodyweight"?"+ "+S.settings.units:S.settings.units}</span><span>reps</span><span></span></div>
     ${e.sets.map((st,j) => setRow(i, j, st, ex)).join("")}
+    <input type="text" class="feelrow" placeholder="Feel (optional) — e.g. smooth, elbow twinge, grip gave out" value="${esc(e.feel||"")}" data-bind="feel" data-i="${i}" aria-label="feel notes">
     <div class="rowflex" style="margin-top:8px;flex-wrap:wrap">
       <button class="btn-ghost" data-action="add-set" data-i="${i}">+ set</button>
       <button class="btn-ghost" data-action="rm-set" data-i="${i}">− set</button>
@@ -663,12 +884,12 @@ function setRow(i, j, st, ex){
     <span class="sn">${j+1}</span>
     <div class="stepper">
       <button data-action="stepw" data-i="${i}" data-j="${j}" data-d="${-step}" aria-label="weight down">−</button>
-      <input type="number" inputmode="decimal" step="any" value="${st.w}" data-bind="w" data-i="${i}" data-j="${j}" aria-label="weight">
+      <input type="number" inputmode="decimal" step="any" value="${numVal(st.w)}" placeholder="0" data-bind="w" data-i="${i}" data-j="${j}" aria-label="weight">
       <button data-action="stepw" data-i="${i}" data-j="${j}" data-d="${step}" aria-label="weight up">+</button>
     </div>
     <div class="stepper">
       <button data-action="stepr" data-i="${i}" data-j="${j}" data-d="-1" aria-label="reps down">−</button>
-      <input type="number" inputmode="numeric" step="1" value="${st.r}" data-bind="r" data-i="${i}" data-j="${j}" aria-label="reps">
+      <input type="number" inputmode="numeric" step="1" value="${numVal(st.r)}" placeholder="0" data-bind="r" data-i="${i}" data-j="${j}" aria-label="reps">
       <button data-action="stepr" data-i="${i}" data-j="${j}" data-d="1" aria-label="reps up">+</button>
     </div>
     <button class="chk ${st.done?"done":""}" data-action="toggle-done" data-i="${i}" data-j="${j}" aria-label="set done">✓</button>
@@ -678,7 +899,7 @@ function cardioCard(e, i){
   const ex = S.exercises[e.exerciseId];
   const c = e.cardio;
   const f = (key,label,mode) => `<label class="fld"><span>${label}</span>
-    <input type="number" inputmode="${mode||"numeric"}" step="any" value="${c[key]}" data-bind="cardio" data-key="${key}" data-i="${i}"></label>`;
+    <input type="number" inputmode="${mode||"numeric"}" step="any" value="${numVal(c[key])}" placeholder="0" data-bind="cardio" data-key="${key}" data-i="${i}"></label>`;
   return `<div class="card">
     <div class="spread">
       <div class="exname">${esc(ex ? ex.name : "Cardio")}</div>
@@ -704,7 +925,7 @@ function viewHistory(){
       <details>
         <summary class="spread">
           <div>
-            <strong>${esc(tplName(s.templateId))}</strong>
+            <strong>${esc(tplName(s))}</strong>
             <div class="small dim">${esc(fmtDate(s.date))} · ${daysAgo(s.date)}${s.dur ? ` · ${s.dur} min` : ""}</div>
           </div>
           <span class="num dim">${s.entries.length} items</span>
@@ -728,11 +949,10 @@ function histEntry(e){
     if(c.avgHr) bits.push("avg " + c.avgHr + " bpm");
     if(c.maxHr) bits.push("max " + c.maxHr);
     if(c.cal) bits.push(c.cal + " cal");
-    return `<div class="hist-item"><strong>${esc(name)}</strong><div class="num small dim">${bits.join(" · ") || "—"}</div></div>`;
+    if(e.feel) bits.push(e.feel);
+    return `<div class="hist-item"><strong>${esc(name)}</strong><div class="num small dim">${esc(bits.join(" · ")) || "—"}</div></div>`;
   }
-  const done = (e.sets||[]).filter(st => st.done);
-  const byW = done.map(st => `${st.w||"BW"}×${st.r}`).join(", ");
-  return `<div class="hist-item"><strong>${esc(name)}</strong><div class="num small dim">${byW || "—"}</div></div>`;
+  return `<div class="hist-item"><strong>${esc(name)}</strong><div class="num small dim">${esc(perfLine(e, S.settings.units)) || "—"}</div></div>`;
 }
 
 /* ----- Plan (templates + exercise library) ----- */
@@ -746,7 +966,7 @@ function viewPlan(){
           <button class="btn-ghost" data-action="rot-up" data-idx="${idx}" aria-label="move up">↑</button>
         </span>
       </div>`).join("")}
-      <p class="small dim" style="margin:6px 0 0">Days alternate in this order. Finishing one pre-loads the next.</p>
+      <p class="small dim" style="margin:6px 0 0">Quick-start days alternate in this order.</p>
     </div>
 
     <p class="eyebrow" style="margin-top:18px">Day templates</p>
@@ -765,19 +985,13 @@ function viewPlan(){
               </span>
             </div>`;
           }).join("")}
-          <div class="rowflex" style="margin-top:8px;flex-wrap:wrap">
-            <select data-role="tpl-add-select" data-tpl="${t.id}">
-              <option value="">Add exercise…</option>
-              ${Object.values(S.exercises).filter(e=>e.type!=="cardio" && !t.exerciseIds.includes(e.id))
-                .map(e=>`<option value="${e.id}">${esc(e.name)}</option>`).join("")}
-            </select>
-            <button data-action="tpl-ex-add" data-tpl="${t.id}">Add</button>
-          </div>
+          <button style="margin-top:8px" data-action="tpl-ex-add" data-tpl="${t.id}">+ Add exercise…</button>
         </details>
       </div>`).join("")}
     <button data-action="tpl-new" class="btn-wide">+ New day template</button>
 
     <p class="eyebrow" style="margin-top:18px">Exercise library</p>
+    <p class="small dim" style="margin:4px 0 10px">Yours. The built-in list (~100 more) shows up in every Add / Swap search.</p>
     ${Object.values(S.exercises).map(ex => `
       <div class="card">
         <details ${editingExId===ex.id?"open":""}>
@@ -799,7 +1013,7 @@ function exerciseForm(ex){
     <label class="fld"><span>Name</span><input value="${esc(ex.name)}" data-exfield="name" data-ex="${ex.id}" style="width:100%"></label>
     <label class="fld"><span>Type</span>
       <select data-exfield="type" data-ex="${ex.id}">
-        ${["barbell","dumbbell","machine","bodyweight","cardio"].map(t=>`<option ${ex.type===t?"selected":""}>${t}</option>`).join("")}
+        ${["barbell","dumbbell","cable","machine","bodyweight","cardio"].map(t=>`<option ${ex.type===t?"selected":""}>${t}</option>`).join("")}
       </select></label>
     <label class="fld"><span>Muscles</span><input value="${esc(ex.muscles)}" data-exfield="muscles" data-ex="${ex.id}" style="width:100%"></label>
     ${ex.type==="cardio" ? "" : `
@@ -811,20 +1025,28 @@ function exerciseForm(ex){
     <button class="btn-danger" data-action="ex-del" data-ex="${ex.id}">Delete exercise</button>`;
 }
 
-/* ----- Data (export / import / progress) ----- */
+/* ----- Data (export / import / PRs) ----- */
 function viewData(){
   const strengthIds = Object.values(S.exercises).filter(e=>e.type!=="cardio").map(e=>e.id);
   const rows = strengthIds.map(id => {
     const ex = S.exercises[id];
-    let best = null;
+    let best = null, bestEntry = null;
     for(const s of S.sessions) for(const e of (s.entries||[])){
       if(e.exerciseId!==id || !e.sets) continue;
-      for(const st of e.sets){ if(st.done && (!best || (st.w||0) > best.w || ((st.w||0)===best.w && st.r>best.r))) best = {w:st.w||0, r:st.r, date:s.date}; }
+      for(const st of e.sets){
+        if(st.done && (!best || (st.w||0) > best.w || ((st.w||0)===best.w && st.r>best.r))){ best = {w:st.w||0, r:st.r, date:s.date}; bestEntry = e; }
+      }
     }
-    return best ? `<div class="spread hist-item"><span>${esc(ex.name)}</span><span class="num dim">${best.w||"BW"} × ${best.r} <span class="small">(${esc(fmtDate(best.date))})</span></span></div>` : "";
+    if(!best) return "";
+    const mach = bestEntry ? [bestEntry.machine, bestEntry.mtype].filter(Boolean).join(" / ") : "";
+    const feel = bestEntry && bestEntry.feel ? bestEntry.feel : "";
+    return `<div class="hist-item">
+      <div class="spread"><strong>${esc(ex.name)}</strong><span class="num dim">${best.w||"BW"} × ${best.r}</span></div>
+      <div class="num small dim">${esc(mach)}${mach && (feel||true) ? "" : ""}${mach?" · ":""}${esc(fmtDate(best.date))}${feel ? " · " + esc(feel) : ""}</div>
+    </div>`;
   }).join("");
   return `
-    <p class="eyebrow">Bests</p>
+    <p class="eyebrow">PRs</p>
     <div class="card">${rows || `<div class="empty">Log sessions to see PRs.</div>`}</div>
 
     <p class="eyebrow" style="margin-top:18px">Backup</p>
@@ -839,10 +1061,10 @@ function viewData(){
       <p class="eyebrow" style="margin-bottom:8px">Restore</p>
       <textarea id="importbox" placeholder="Paste a backup here"></textarea>
       <button style="margin-top:8px" data-action="import">Import (replaces current data)</button>
-      <p class="small dim">Current data is auto-stashed to a recovery slot before import (<span class="num">${LS_PREIMPORT}</span>).</p>
+      <p class="small dim">Current data is auto-stashed to a recovery slot before import.</p>
       ${localStorage.getItem(LS_PREIMPORT) ? `<button class="btn-ghost" data-action="restore-preimport">Undo last import</button>` : ""}
     </div>
-    <p class="small dim" style="text-align:center">IronLog · local-only · v3</p>`;
+    <p class="small dim" style="text-align:center">RepWave · local-only · v4</p>`;
 }
 function doExport(){ return JSON.stringify(S, null, 0); }
 async function exportCopy(){
@@ -860,9 +1082,9 @@ async function exportCopy(){
 }
 async function exportShare(){
   const data = doExport();
-  const file = new File([data], "ironlog-backup-" + todayStr() + ".json", {type:"application/json"});
+  const file = new File([data], "repwave-backup-" + todayStr() + ".json", {type:"application/json"});
   if(navigator.canShare && navigator.canShare({files:[file]})){
-    try{ await navigator.share({files:[file], title:"IronLog backup"}); return; }catch(e){/* cancelled */}
+    try{ await navigator.share({files:[file], title:"RepWave backup"}); return; }catch(e){/* cancelled */}
   }else{
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([data],{type:"application/json"}));
@@ -874,7 +1096,7 @@ function doImport(){
   if(!raw){ toast("Paste a backup first"); return; }
   let obj;
   try{ obj = JSON.parse(raw); }catch(e){ toast("Not valid JSON"); return; }
-  if(!obj || obj.version !== 1 || !obj.exercises || !Array.isArray(obj.sessions)){ toast("Doesn't look like an IronLog backup"); return; }
+  if(!obj || obj.version !== 1 || !obj.exercises || !Array.isArray(obj.sessions)){ toast("Doesn't look like a RepWave/IronLog backup"); return; }
   localStorage.setItem(LS_PREIMPORT, JSON.stringify(S));   // move-aside before replace
   S = obj; S.tab = "data"; S.active = S.active || null;
   if(S.active && !S.active.startedAt){ S.active.startedAt = Date.now(); S.active.accumMs = 0; S.active.paused = false; }
@@ -896,6 +1118,27 @@ document.addEventListener("click", async ev => {
 
   if(a === "tab"){ S.tab = b.dataset.tab; save(); render(); }
   else if(a === "start"){ startSession(b.dataset.tpl || null, b.dataset.cardio === "1"); }
+  else if(a === "focus-chip"){
+    const f = b.dataset.f;
+    if(focusSel.has(f)) focusSel.delete(f); else focusSel.add(f);
+    b.classList.toggle("sel");            // no re-render: keeps whatever's typed in the box
+  }
+  else if(a === "start-focus"){
+    const typed = ($("#focustext") ? $("#focustext").value : "").split(/[,\s]+/).filter(Boolean);
+    const groups = [];
+    const labelBits = [];
+    for(const id of focusSel){
+      const f = FOCI.find(f => f.id === id);
+      if(f){ groups.push(...f.groups); labelBits.push(f.label); }
+    }
+    for(const t of typed){
+      const g = termToGroups(t);
+      if(g.length){ groups.push(...g); labelBits.push(t[0].toUpperCase()+t.slice(1)); }
+    }
+    if(!groups.length){ toast("Pick a chip or type a muscle group"); return; }
+    focusSel.clear();
+    startFocusSession(groups, [...new Set(labelBits)].join(" / "));
+  }
   else if(a === "finish"){ finishSession(); }
   else if(a === "discard"){ discardSession(); }
   else if(a === "pause"){ togglePause(); }
@@ -909,13 +1152,21 @@ document.addEventListener("click", async ev => {
   else if(a === "add-set"){ const e = S.active.entries[i]; const lastSet = e.sets[e.sets.length-1]; e.sets.push({w: lastSet?lastSet.w:0, r: lastSet?lastSet.r:0, done:false}); save(); render(); }
   else if(a === "rm-set"){ const e = S.active.entries[i]; if(e.sets.length>1) e.sets.pop(); save(); render(); }
   else if(a === "remove-entry"){ S.active.entries.splice(i,1); save(); render(); }
-  else if(a === "add-cardio"){ for(const cid of S.cardioIds){ if(S.exercises[cid]) S.active.entries.push({exerciseId: cid, cardio: prefillCardio(S.exercises[cid], S.sessions)}); } save(); render(); }
+  else if(a === "add-cardio"){ for(const cid of S.cardioIds){ if(S.exercises[cid] && !S.active.entries.some(e=>e.exerciseId===cid)) S.active.entries.push(cardioEntry(S.exercises[cid])); } save(); render(); }
   else if(a === "add-ex-menu"){ addExerciseMenu(); }
   else if(a === "del-session"){ if(await appConfirm("Delete this session from history? Export a backup first if unsure.", "Delete")){ S.sessions = S.sessions.filter(s => s.id !== b.dataset.id); save(); render(); } }
   else if(a === "rot-up"){ const idx = Number(b.dataset.idx); if(idx>0){ [S.rotation[idx-1],S.rotation[idx]]=[S.rotation[idx],S.rotation[idx-1]]; save(); render(); } }
   else if(a === "tpl-ex-up"){ const t = S.templates.find(t=>t.id===b.dataset.tpl); const idx=Number(b.dataset.idx); if(t&&idx>0){ [t.exerciseIds[idx-1],t.exerciseIds[idx]]=[t.exerciseIds[idx],t.exerciseIds[idx-1]]; save(); render(); } }
   else if(a === "tpl-ex-rm"){ const t = S.templates.find(t=>t.id===b.dataset.tpl); if(t){ t.exerciseIds.splice(Number(b.dataset.idx),1); save(); render(); } }
-  else if(a === "tpl-ex-add"){ const t = S.templates.find(t=>t.id===b.dataset.tpl); const sel = document.querySelector(`select[data-role="tpl-add-select"][data-tpl="${t.id}"]`); if(t && sel && sel.value){ t.exerciseIds.push(sel.value); save(); render(); } }
+  else if(a === "tpl-ex-add"){
+    const t = S.templates.find(t=>t.id===b.dataset.tpl);
+    if(!t) return;
+    const items = pickerItems(new Set(t.exerciseIds));
+    const idx = await appPickSearch("Add to " + t.name, items);
+    if(idx == null) return;
+    const ex = resolvePick(items, idx);
+    if(ex){ t.exerciseIds.push(ex.id); save(); render(); }
+  }
   else if(a === "tpl-new"){ const name = await appPrompt("Name the new day", {placeholder:"e.g. Legs / Core", okLabel:"Add day"}); if(name){ const t={id:uid(),name,exerciseIds:[]}; S.templates.push(t); S.rotation.push(t.id); save(); render(); } }
   else if(a === "ex-new"){ const name = await appPrompt("Name the new exercise", {placeholder:"e.g. Goblet Squat", okLabel:"Add exercise"}); if(name){ const id=uid(); S.exercises[id]={id,name,type:"dumbbell",muscles:"",sets:3,repMin:8,repMax:12,increment:5}; editingExId=id; save(); render(); } }
   else if(a === "ex-del"){ const id=b.dataset.ex; if(await appConfirm("Delete this exercise? History keeps its logged sets, templates drop it.", "Delete")){ delete S.exercises[id]; for(const t of S.templates) t.exerciseIds = t.exerciseIds.filter(x=>x!==id); S.cardioIds = S.cardioIds.filter(x=>x!==id); save(); render(); } }
@@ -924,14 +1175,6 @@ document.addEventListener("click", async ev => {
   else if(a === "import"){ doImport(); }
   else if(a === "restore-preimport"){ restorePreimport(); }
 });
-async function addExerciseMenu(){
-  const pool = Object.values(S.exercises).filter(e => e.type!=="cardio" && !S.active.entries.some(en => en.exerciseId===e.id));
-  if(!pool.length){ toast("Everything's already in — add new ones in Plan"); return; }
-  const idx = await appPick("Add which exercise?", pool.map(e => e.name));
-  if(idx == null || !pool[idx]) return;
-  S.active.entries.push(freshEntry(pool[idx]));
-  save(); render();
-}
 /* input bindings (commit on change) */
 document.addEventListener("change", ev => {
   const el = ev.target;
@@ -943,6 +1186,9 @@ document.addEventListener("change", ev => {
     const c = S.active.entries[Number(el.dataset.i)].cardio;
     c[el.dataset.key] = el.value === "" ? "" : Number(el.value);
     save();
+  }else if(el.dataset.bind === "machine" || el.dataset.bind === "mtype" || el.dataset.bind === "feel"){
+    const e = S.active.entries[Number(el.dataset.i)];
+    if(e){ e[el.dataset.bind] = el.value; save(); }
   }else if(el.dataset.bind === "notes"){
     S.active.notes = el.value; save();
   }else if(el.dataset.exfield){
